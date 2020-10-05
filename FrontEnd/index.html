@@ -1,0 +1,174 @@
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Go frontend app</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+  <link href="../css/styles.css" rel="stylesheet">
+  <script type="text/javascript" src="../js/func_interfaz.js"></script>
+
+  <script type="text/javascript" src="../codemirror/lib/codemirror.js"></script>
+  <link rel="stylesheet" href="../codemirror/lib/codemirror.css">
+  <link rel="stylesheet" href="../codemirror/theme/darcula.css">
+  <link rel="stylesheet" href="../codemirror/theme/zenburn.css">
+
+  <script src="./codemirror/mode/clike/clike.js"></script>
+  <script type="text/javascript" src="../codemirror/mode/javascript/javascript.js"></script>
+
+  <script src="./codemirror/addon/edit/matchbrackets.js"></script>
+  <script src="./codemirror/addon/comment/continuecomment.js"></script>
+
+  <script src="./codemirror/addon/runmode/colorize.js"></script>
+
+  <script src="./codemirror/addon/hint/javascript-hint.js"></script>
+  <script src="./codemirror/addon/hint/html-hint.js"></script>
+  <script src="./codemirror/addon/hint/css-hint.js"></script>
+  <script src="./codemirror/addon/hint/anyword-hint.js"></script>
+  <script src="./codemirror/addon/hint/sql-hint.js"></script>
+  <script src="./codemirror/addon/lint/lint.js"></script>
+
+  <script src="./codemirror/keymap/sublime.js"></script>
+
+  <script type="text/javascript" src="./wasm_exec.js"></script>
+  <script type="text/javascript" src="./glue.js"></script>
+</head>
+
+<body>
+
+  <div id="contenedor" class="contenedor">
+    
+    <!-- <input type="file" id="file-input" onchange="ArbrirArchivo(this.File)"/> -->
+    <input type="file" id="file" />  </br></br>
+  
+    <input type="button" value="Read text files" onclick="readAsText()" />
+    
+    <p id="result"></p>
+    <div></br></div>
+
+    <div id="cabecera_lista">
+      <select name="Archivo" id="Archivo" onchange="seleccionArchivo()">
+        <optgroup label="Archivo.">
+          <option id="save" value="Guardar" onclick="Guardar()">Guardar</option>
+          <option id="save_as" value="GuardarC">GuardarComo...</option>
+          <option id="out" value="Salida">Ir a facebook</option>
+      </select>
+
+      <select name="Analisis">
+        <optgroup label="Analisis">
+          <option value="Analisis">Enviar Analisis</option>
+      </select>
+
+      <select name="Reportes">
+        <optgroup label="Reportes">
+          <option value="AST">Reporte AST</option>
+          <option value="Errores">Reporte de Errores</option>
+          <option value="Errores_Sintacticos">Errores Sintacticos</option>
+          <option value="Tokens">Reporte de Tokens</option>
+      </select>
+
+      <select name="Manuales">
+        <optgroup label="Manuales">
+          <option value="Tecnico">Manual Tecnico</option>
+          <option value="Usuario">Manual Usuario</option>
+      </select>
+    </div>
+
+  </div>
+  <div id="contenidopestanas">
+
+    <div id="app" >
+
+      <table style="width: 100%;">
+        <tr>
+          <td>
+            Codigo Fuente
+          </td>
+          <td></td>
+          <td>
+            Codigo JavaScript
+          </td>
+        </tr>
+        <tr>
+          <td style="width: 750px;">
+            <textarea id="myCode" class="myCode" name="myCode"></textarea>
+
+          </td>
+          <td style="width: 50px;"></td>
+          <td>
+            <table>
+              <tr>
+                <textarea id="myJs" class="myJs" name="myJs" readonly></textarea>
+              </tr>
+              <tr>
+                </br></br>Codigo Python</br></br>
+                <textarea id="myPython" class="myPython" name="myPython" readonly></textarea>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+      </table></br></br>
+
+      <script type="text/javascript">
+
+        window.onload = function () {
+          var myTextarea = document.getElementById("myCode");
+          editor = CodeMirror.fromTextArea(myTextarea, {
+            tabMode: "indent",
+            matchBrackets: true,
+            lineNumbers: true,
+            lineWrapping: true,
+            indentUnit: 4,
+            mode: "text/x-java",
+            theme: "darcula"
+          });
+          editor.setSize("100%", "780");
+
+          //editor.doc.replaceSelection("sadfadsf");
+          
+          var myTextareaa = document.getElementById("myPython");
+          editorr = CodeMirror.fromTextArea(myTextareaa, {
+            tabMode: "indent",
+            matchBrackets: true,
+            lineNumbers: true,
+            lineWrapping: true,
+            indentUnit: 4,
+            parserConfig: { 'pythonVersion': 3, 'strictErrors': true },
+            mode: "text/x-cython",
+            theme: "zenburn"
+          });
+          editorr.setSize("100%", "350");
+          editorr.setOption("readOnly", true);
+
+          var myTextareaaa = document.getElementById("myJs");
+          editorrr = CodeMirror.fromTextArea(myTextareaaa, {
+            tabMode: "indent",
+            matchBrackets: true,
+            lineNumbers: true,
+            lineWrapping: true,
+            indentUnit: 4,
+            mode: "javascript",
+            theme: "zenburn"
+          });
+          editorrr.setSize("100%", "350");
+          editorrr.setOption("readOnly", true)
+
+          tomarValor(editor, editorr, editorrr);
+
+        }
+
+
+
+
+      </script>
+
+
+
+    </div>
+  </div>
+</body>
+
+</html>
