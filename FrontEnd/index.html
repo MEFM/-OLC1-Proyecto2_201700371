@@ -15,6 +15,9 @@
   <link rel="stylesheet" href="../codemirror/theme/darcula.css">
   <link rel="stylesheet" href="../codemirror/theme/zenburn.css">
 
+  <script type="text/javascript" src="../BackEnd/Python/analisi.js"></script>
+  <script type="text/javascript" src="../BackEnd/Python/Tokens.js"></script>
+
   <script src="./codemirror/mode/clike/clike.js"></script>
   <script type="text/javascript" src="../codemirror/mode/javascript/javascript.js"></script>
 
@@ -51,14 +54,15 @@
     <div id="cabecera_lista">
       <select name="Archivo" id="Archivo" onchange="seleccionArchivo()">
         <optgroup label="Archivo.">
-          <option id="save" value="Guardar" onclick="Guardar()">Guardar</option>
+          <option id="save" value="Guardar">Guardar</option>
           <option id="save_as" value="GuardarC">GuardarComo...</option>
           <option id="out" value="Salida">Ir a facebook</option>
       </select>
 
-      <select name="Analisis">
+      <select name="AnalisisBar" id="AAAA" onchange="seleccionAnalisis()">
         <optgroup label="Analisis">
-          <option value="Analisis">Enviar Analisis</option>
+          <option value="EnvAna">Enviar Analisis</option>
+          <option value="s"></option>
       </select>
 
       <select name="Reportes">
@@ -156,8 +160,7 @@
           editorrr.setSize("100%", "350");
           editorrr.setOption("readOnly", true)
 
-          tomarValor(editor, editorr, editorrr);
-
+          tomarValor(editor, editorrr, editorr);
         }
 
 

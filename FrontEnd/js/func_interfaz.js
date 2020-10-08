@@ -1,8 +1,14 @@
+//Reeferencias
+
+
+
 //Seccion para Abrir
 
 var codeMirr; //Objeto de tipo CodeMirror Java
 var codeMirrjs; //Objeto de CM, JavaScript
 var codeMirrpy; //Objeto de CM, Python
+
+var textjav; //Texto de caja java
 
 function tomarValor(cM, cMj, cMp) {
   this.codeMirr = cM;
@@ -31,6 +37,7 @@ function readAsText() {
 
 function aaa(texto) {
   this.codeMirr.getDoc().setValue(texto);
+
 }
 
 //Seccion Para Guardar Archivos
@@ -79,6 +86,10 @@ function guardarArchivo(){
 
 }
 
+function guardarComo(){
+
+}
+
 function descarga(filename, text){
     var element = document.createElement('a');
     element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
@@ -97,6 +108,30 @@ function salida(){
 }
 
 //Seccion para envio de texto para analisis
-function Analizar() {
+
+function seleccionAnalisis(){
+  var cod = document.getElementById("AAAA").value;
+  
+  switch(cod){
+    case "EnvAna":
+
+      envio();
+      
+      break;
+
+  }
+}
+
+//import Analisis from '../BackEnd/Python/analisi.js';
+
+function envio() { 
+  
+
+    var textoEnvio = this.codeMirr.getValue();
+
+    var analizador = new Analisis();
     
+    analizador.lex(textoEnvio);
+
+    this.codeMirrpy.getDoc().setValue(analizador.traduccion());
 }
