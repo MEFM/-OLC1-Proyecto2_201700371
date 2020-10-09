@@ -1,6 +1,7 @@
 
 class Analisis{
 
+    simbolos = {"ParAp":"(","ParC":")","LlavAp":"{","LlavC":"}","CorAp":"[","CorC":"]"};
 
     lex(texto){
 
@@ -19,6 +20,10 @@ class Analisis{
             for(var j=0;j<caracteres.length;j++){
                 if(caracteres[j].match('[A-Za-z]')){
                     estado = 1;
+                    palabra += caracteres[j];
+                }else if(caracteres[j].match('[0.9]')){
+                    estado = 2;
+                    palabra += caracteres[j];
                 }
 
 
