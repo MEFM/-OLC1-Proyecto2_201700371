@@ -22,11 +22,9 @@ class Analisis {
     Guion: "-",
   };
 
-
   listaTokens = [];
   listaErrores = [];
   contador = 0;
-
 
   lex(texto) {
     var lineas = texto.split("\n");
@@ -36,8 +34,6 @@ class Analisis {
     var palabra = "";
 
     //En este analizador a patita la i es fila y j columna
-
-
 
     for (var i = 0; i < lineas.length; i++) {
       var caracteres = lineas[i].split("");
@@ -52,21 +48,32 @@ class Analisis {
               estado = 2;
               palabra += caracteres[j];
             } else if (caracteres[j] == "'") {
-              estado = 3;
               palabra += caracteres[j];
+              estado = 3;
             } else if (caracteres[j] == '"') {
+              palabra += caracteres[j];
+              estado = 4;
+            } else if (caracteres[j] == "/") {
               if (j + 1 < caracteres.length) {
-              } else if (caracteres[j] == "/") {
-                if (caracteres[j + 1] == "*") {
-                  estado = 6;
-                  palabra += caracteres;
-                }
+                if (caracteres[j] == "/") {
+                  if (caracteres[j + 1] == "*") {
+                    estado = 7;
+                    palabra += caracteres;
+                  }
 
-                if (caracteres[j + 1] == "/") {
-                  estado = 7;
-                  palabra += caracteres;
+                  if (caracteres[j + 1] == "/") {
+                    estado = 6;
+                    palabra += caracteres;
+                  }
                 }
               }
+            } else if (
+              caracteres[j] == " " ||
+              caracteres[j] == "\n" ||
+              caracteres[j] == "\t" ||
+              caracteres[j] == "\r"
+            ) {
+              estado = 0;
             } else {
               var validador = false;
               for (var simbolo in this.simbolos) {
@@ -78,7 +85,9 @@ class Analisis {
               }
 
               if (validador == false) {
-                this.listaErrores.push(new ErrorT(0, i, j, palabra, "Error Lexico"));
+                this.listaErrores.push(
+                  new ErrorT(0, i, j, palabra, "Error Lexico")
+                );
               }
             }
 
@@ -115,7 +124,7 @@ class Analisis {
               this.token(palabra, i, j);
               palabra = "";
               estado = 0;
-              j--;
+              //j--;
             } else {
               palabra += caracteres[j];
               estado = 3;
@@ -126,10 +135,10 @@ class Analisis {
               this.token(palabra, i, j);
               palabra = "";
               estado = 0;
-              j--;
+              //j--;
             } else {
               palabra += caracteres[j];
-              estado = 3;
+              estado = 4;
             }
             break;
           case 5:
@@ -139,26 +148,29 @@ class Analisis {
             j--;
             break;
           case 6:
-            if (caracteres[j] == "\n") {
+            if (j + 1 == caracteres.length) {
+              estado = 0;
+              // j--;
+              palabra = "";
             } else {
               estado = 6;
             }
             break;
           case 7:
-            if ((j+1)<caracteres.length) {
+            if (j + 1 < caracteres.length) {
               if (caracteres[j] == "*" && caracteres[j + 1] == "/") {
-                  estado = 0;
-                  j--;
+                estado = 0;
+                j--;
               } else {
-                estador = 7;
+                estado = 7;
               }
             }
             break;
           case 8:
-              this.token(palabra, i, j, this.simbolos[palabra]);
-              palabra = "";
-              estado = 0;
-              j--;
+            this.token(palabra, i, j, this.simbolos[palabra]);
+            palabra = "";
+            estado = 0;
+            j--;
             break;
           default:
             console.log("aa");
@@ -166,13 +178,11 @@ class Analisis {
       }
     }
 
-
     var temporal = this.listaTokens;
 
-    for(var i=0;i<temporal.length;i++){
-        console.log(temporal[i].lexema);
+    for (var i = 0; i < temporal.length; i++) {
+      console.log(temporal[i].lexema + "-" + temporal[i].tipo);
     }
-
 
     this.listaErrores = [];
     this.listaTokens = [];
@@ -180,79 +190,134 @@ class Analisis {
   }
 
   token(palabra, fila, columna, simbolo = "") {
-      this.contador = this.contador + 1;
+    this.contador = this.contador + 1;
     switch (palabra) {
       case "class":
-          this.listaTokens.push(new Tokens(this.contador, fila, columna, palabra, "class"));
+        this.listaTokens.push(
+          new Tokens(this.contador, fila, columna, palabra, "class")
+        );
         break;
       case "public":
-            this.listaTokens.push(new Tokens(this.contador, fila, columna, palabra, "public"));
+        this.listaTokens.push(
+          new Tokens(this.contador, fila, columna, palabra, "public")
+        );
         break;
       case "private":
-            this.listaTokens.push(new Tokens(this.contador, fila, columna, palabra, "private"));
+        this.listaTokens.push(
+          new Tokens(this.contador, fila, columna, palabra, "private")
+        );
         break;
       case "protected":
-        this.listaTokens.push(new Tokens(this.contador, fila, columna, palabra, "protected"));
+        this.listaTokens.push(
+          new Tokens(this.contador, fila, columna, palabra, "protected")
+        );
         break;
       case "void":
-        this.listaTokens.push(new Tokens(this.contador, fila, columna, palabra, "void"));
+        this.listaTokens.push(
+          new Tokens(this.contador, fila, columna, palabra, "void")
+        );
         break;
       case "int":
-        this.listaTokens.push(new Tokens(this.contador, fila, columna, palabra, "int"));
+        this.listaTokens.push(
+          new Tokens(this.contador, fila, columna, palabra, "int")
+        );
         break;
       case "boolean":
-        this.listaTokens.push(new Tokens(this.contador, fila, columna, palabra, "boolean"));
+        this.listaTokens.push(
+          new Tokens(this.contador, fila, columna, palabra, "boolean")
+        );
         break;
       case "char":
-        this.listaTokens.push(new Tokens(this.contador, fila, columna, palabra, "char"));
+        this.listaTokens.push(
+          new Tokens(this.contador, fila, columna, palabra, "char")
+        );
         break;
       case "System":
-        this.listaTokens.push(new Tokens(this.contador, fila, columna, palabra, "System"));
+        this.listaTokens.push(
+          new Tokens(this.contador, fila, columna, palabra, "System")
+        );
         break;
       case "out":
-        this.listaTokens.push(new Tokens(this.contador, fila, columna, palabra, "out"));
+        this.listaTokens.push(
+          new Tokens(this.contador, fila, columna, palabra, "out")
+        );
         break;
       case "println":
-        this.listaTokens.push(new Tokens(this.contador, fila, columna, palabra, "println"));
+        this.listaTokens.push(
+          new Tokens(this.contador, fila, columna, palabra, "println")
+        );
         break;
       case "print":
-        this.listaTokens.push(new Tokens(this.contador, fila, columna, palabra, "print"));
+        this.listaTokens.push(
+          new Tokens(this.contador, fila, columna, palabra, "print")
+        );
         break;
       case "for":
-        this.listaTokens.push(new Tokens(this.contador, fila, columna, palabra, "for"));
+        this.listaTokens.push(
+          new Tokens(this.contador, fila, columna, palabra, "for")
+        );
         break;
       case "String":
-        this.listaTokens.push(new Tokens(this.contador, fila, columna, palabra, "String"));
+        this.listaTokens.push(
+          new Tokens(this.contador, fila, columna, palabra, "String")
+        );
         break;
       case "while":
-        this.listaTokens.push(new Tokens(this.contador, fila, columna, palabra, "while"));
+        this.listaTokens.push(
+          new Tokens(this.contador, fila, columna, palabra, "while")
+        );
         break;
       case "do":
-        this.listaTokens.push(new Tokens(this.contador, fila, columna, palabra, "do"));
+        this.listaTokens.push(
+          new Tokens(this.contador, fila, columna, palabra, "do")
+        );
         break;
       case "if":
-        this.listaTokens.push(new Tokens(this.contador, fila, columna, palabra, "if"));
+        this.listaTokens.push(
+          new Tokens(this.contador, fila, columna, palabra, "if")
+        );
         break;
       case "else":
-        this.listaTokens.push(new Tokens(this.contador, fila, columna, palabra, "else"));
+        this.listaTokens.push(
+          new Tokens(this.contador, fila, columna, palabra, "else")
+        );
         break;
-        
+
       default:
         var validador = false;
         for (var simbolo in this.simbolos) {
           if (palabra == this.simbolos[simbolo]) {
             //Aca se agrega la cosa de los simbolos
             validador = true;
-            this.listaTokens.push(new Tokens(this.contador, fila, columna, palabra, "class"));
+            this.listaTokens.push(
+              new Tokens(this.contador, fila, columna, palabra, simbolo)
+            );
           }
         }
         if (validador == false) {
-          if (palabra.match("[A-Za-z][A-Za-z]*[A-Za-z0-9_]*")) {
+          if (palabra.includes('"')) {
+            this.listaTokens.push(
+              new Tokens(this.contador, fila, columna, palabra, "Cadena")
+            );
+          } else if (palabra.includes("'")) {
+            this.listaTokens.push(
+              new Tokens(this.contador, fila, columna, palabra, "Caracter")
+            );
+          } else if (palabra.match("[A-Za-z][A-Za-z]*[A-Za-z0-9_]*")) {
             //Se agrega la palabra nada mas
+            this.listaTokens.push(
+              new Tokens(this.contador, fila, columna, palabra, "Identificador")
+            );
           } else if (palabra.match("[0-9][0-9]*")) {
             //Se agrega enteros
+            this.listaTokens.push(
+              new Tokens(this.contador, fila, columna, palabra, "Entero")
+            );
           } else if (palabra.match("[0-9][0-9]*(.[0-9][0-9]*)?")) {
             //Se agrega decimales
+            this.listaTokens.push(
+              new Tokens(this.contador, fila, columna, palabra, "Float")
+            );
           }
         }
     }
