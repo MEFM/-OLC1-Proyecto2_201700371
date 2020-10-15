@@ -14,3 +14,4 @@ class ErrorT{
         this.tipo = tipo;
     }
 }
+

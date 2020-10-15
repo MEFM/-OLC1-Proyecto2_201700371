@@ -131,7 +131,7 @@ function envio() {
 
     var analizador = new Analisis();
     
-    analizador.lex(textoEnvio);
+    
 
-    this.codeMirrpy.getDoc().setValue(analizador.traduccion());
+    this.codeMirrpy.getDoc().setValue(analizador.lex(textoEnvio));
 }

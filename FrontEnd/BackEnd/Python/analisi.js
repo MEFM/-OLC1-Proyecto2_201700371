@@ -20,11 +20,13 @@ class Analisis {
     Negar: "!",
     Xor: "^",
     Guion: "-",
+    Cruz: "+",
   };
 
   listaTokens = [];
   listaErrores = [];
   contador = 0;
+  traduccion;
 
   lex(texto) {
     var lineas = texto.split("\n");
@@ -92,7 +94,6 @@ class Analisis {
             }
 
             break;
-
           case 1:
             //Estado para letras
 
@@ -179,19 +180,26 @@ class Analisis {
     }
 
     var temporal = this.listaTokens;
-
+    /** 
     for (var i = 0; i < temporal.length; i++) {
       console.log(temporal[i].lexema + "-" + temporal[i].tipo);
     }
+    */
 
     this.listaErrores = [];
     this.listaTokens = [];
     this.contador = 0;
+    return this.traductor(temporal);
   }
 
   token(palabra, fila, columna, simbolo = "") {
     this.contador = this.contador + 1;
     switch (palabra) {
+      case "interface":
+        this.listaTokens.push(
+          new Tokens(this.contador, fila, columna, palabra, "interface")
+        );
+        break;
       case "class":
         this.listaTokens.push(
           new Tokens(this.contador, fila, columna, palabra, "class")
@@ -214,22 +222,22 @@ class Analisis {
         break;
       case "void":
         this.listaTokens.push(
-          new Tokens(this.contador, fila, columna, palabra, "void")
+          new Tokens(this.contador, fila, columna, palabra, "TipoDato")
         );
         break;
       case "int":
         this.listaTokens.push(
-          new Tokens(this.contador, fila, columna, palabra, "int")
+          new Tokens(this.contador, fila, columna, palabra, "TipoDato")
         );
         break;
       case "boolean":
         this.listaTokens.push(
-          new Tokens(this.contador, fila, columna, palabra, "boolean")
+          new Tokens(this.contador, fila, columna, palabra, "TipoDato")
         );
         break;
       case "char":
         this.listaTokens.push(
-          new Tokens(this.contador, fila, columna, palabra, "char")
+          new Tokens(this.contador, fila, columna, palabra, "TipoDato")
         );
         break;
       case "System":
@@ -259,7 +267,7 @@ class Analisis {
         break;
       case "String":
         this.listaTokens.push(
-          new Tokens(this.contador, fila, columna, palabra, "String")
+          new Tokens(this.contador, fila, columna, palabra, "TipoDato")
         );
         break;
       case "while":
@@ -282,7 +290,6 @@ class Analisis {
           new Tokens(this.contador, fila, columna, palabra, "else")
         );
         break;
-
       default:
         var validador = false;
         for (var simbolo in this.simbolos) {
@@ -296,10 +303,12 @@ class Analisis {
         }
         if (validador == false) {
           if (palabra.includes('"')) {
+            palabra += '"';
             this.listaTokens.push(
               new Tokens(this.contador, fila, columna, palabra, "Cadena")
             );
           } else if (palabra.includes("'")) {
+            palabra += "'";
             this.listaTokens.push(
               new Tokens(this.contador, fila, columna, palabra, "Caracter")
             );
@@ -323,9 +332,209 @@ class Analisis {
     }
   }
 
-  traduccion() {
-    return "def main";
+  traductor(temporal) {
+    var tabs = "";
+    for (var i = 0; i < temporal.length; i++) {
+      if (temporal[i].tipo == "public") {
+        /*
+          Cualquier declaracion de tipo public conlleva a que solo puedan ser:
+            -Declaracion de metodos
+            -Declaracion de variables
+            -Clases o Interfaces
+        */
+        if (
+          temporal[i + 1].tipo == "class" ||
+          temporal[i + 1].tipo == "interface"
+        ) {
+          tabs = "";
+          i = i + 1;
+          this.traduccion += "class";
+          this.traduccion += " " + temporal[i + 1].lexema + "";
+          i = i + 1;
+        } else if (temporal[i + 1].tipo == "TipoDato") {
+          i = i + 1;
+
+          if (temporal[i + 1].tipo == "Identificador") {
+            i = i + 1;
+            if (temporal[i + 1].lexema == "(") {
+              this.traduccion += tabs + "def " + temporal[i].lexema + "";
+              for (var j = i+1; j < temporal.length; j++) {
+                if (temporal[j].lexema != "{") {
+                  this.traduccion += temporal[j].lexema + " ";
+                } else {
+                  i = j - 1;
+                  //this.traduccion += ":\n"
+                  break;
+                }
+              }
+            } else {
+              this.traduccion += tabs + "var ";
+              for (var j = i; j < temporal.length; j++) {
+                if (temporal[j].temporal != ";") {
+                  this.traduccion += temporal[j].lexema + " ";
+                } else {
+                  i = j - 1;
+                  break;
+                }
+              }
+            }
+          }
+        } else if (temporal[i + 1].tipo == "Identificador") {
+          i = i + 1;
+          if (temporal[i + 1].lexema == "(") {
+            this.traduccion += tabs + "def __init__";
+          }
+        }
+      } else if (temporal[i].tipo == "TipoDato") {
+        /*
+          Solo pueden ser variables dentro de un metodo
+        */
+        this.traduccion += tabs + "var " + temporal[i + 1].lexema +" ";
+
+      }else if(temporal[i].tipo = "Identificador"){
+        this.traduccion += tabs + temporal[i].lexema;
+
+        for(var j=i;j<temporal.length;j++){
+          if(temporal[j].lexema != ";" || temporal[j].lexema != "{"){
+            this.traduccion += temporal[j].lexema;
+          }else{
+            i = j - 1;
+            break;
+          }
+        }
+      }
+      else if (temporal[i].tipo == "for") {
+        /*
+          sentencia de repeticion 1
+        */
+
+        var contenedor = 0;
+        this.traduccion += tabs + "for var " + temporal[i + 3].lexema + " ";
+
+        if (
+          temporal[i + 5].tipo == "Entero" ||
+          temporal[i + 5].tipo == "Float" ||
+          (temporal[i + 5].tipo == "Identificador" &&
+            temporal[i + 6].lexema == ";")
+        ) {
+          contenedor = temporal[i + 5].lexema;
+        } else {
+          contenedor = 0;
+        }
+
+        this.traduccion += "in Range(" + contenedor + ",";
+
+        for (var j = (i + 3); j < temporal.length; j++) {
+          if (temporal[j].lexema == ";") {
+            for (var k = j + 1; k < temporal.length; k++) {
+              if (temporal[k].lexema != ";") {
+                this.traduccion += temporal[k].lexema;
+              } else {
+                this.traduccion += ")";
+                for (var l = k + 1; l < temporal.length; l++) {
+                  if (temporal[l].lexema != "{") {
+                  } else {
+                    i = l - 1;
+                    break;
+                  }
+                }
+                break;
+              }
+            }
+            break;
+          }
+          break;
+        }
+      } else if (temporal[i].tipo == "while") {
+        /*
+          sentencia de repeticion 1
+        */
+
+        this.traduccion += tabs + "while";
+      } else if (temporal[i].tipo == "do") {
+        /*
+          sentencia de repeticion 1
+        */
+
+        this.traduccion += tabs + "while";
+      } else if (temporal[i].tipo == "System") {
+        i = i + 5;
+        var tem = temporal;
+
+        this.traduccion += tabs + "print";
+        for (var j = i; j < temporal.length; j++) {
+          if (temporal[j].lexema != ";") {
+            this.traduccion += temporal[j].lexema;
+          } else {
+            this.traduccion += "\n";
+            i = j;
+            break;
+          }
+        }
+      } else if (temporal[i].tipo == "if") {
+        i = i + 1;
+        this.traduccion += tabs + "if";
+        for (var j = i; j < temporal.length; j++) {
+          if (temporal[j].lexema != "{") {
+            this.traduccion += temporal[j].lexema + " ";
+          } else {
+            i = j - 1;
+            break;
+          }
+        }
+      } else if (temporal[i].lexema == "else") {
+        i = i + 1;
+
+        if (temporal[i].lexema == "if") {
+          this.traduccion += tabs + "elif";
+          i = i + 1;
+          for (var j = i; j < temporal.length; j++) {
+            if (temporal[j].lexema != "{") {
+              this.traduccion += temporal[j].lexema;
+            } else {
+              i = j - 1;
+              break;
+            }
+          }
+        } else {
+          this.traduccion += tabs + "else:\n";
+          if (temporal[i + 1].lexema == "{") {
+            tabs += "\t";
+            i = i + 1;
+
+            for (var j = i; j < temporal.length; j++) {
+              if (temporal[j].lexema != "}") {
+                this.traduccion += tabs + temporal[j];
+              } else {
+                i = i - j;
+                break;
+              }
+            }
+          }
+        }
+      } else {
+        if (temporal[i].lexema == "{") {
+          tabs += "\t";
+          this.traduccion += ":\n";
+        } else if (temporal[i].lexema == ";") {
+          this.traduccion += "\n";
+        } else if (temporal[i].lexema == "}") {
+          tabs = this.replaceAt(tabs, 0, "");
+          this.traduccion += "\n";
+        } else if (temporal[i].lexema == "(") {
+        } else if (temporal[i].lexema == ")") {
+        } else {
+          //this.traduccion += " "+temporal[i].lexema;
+        }
+      }
+    }
+
+    return this.traduccion;
   }
 
   repor() {}
+
+  replaceAt(string, index, replace) {
+    return string.substring(0, index) + replace + string.substring(index + 1);
+  }
 }

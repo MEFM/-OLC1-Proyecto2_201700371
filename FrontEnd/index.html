@@ -116,58 +116,59 @@
         </tr>
 
       </table></br></br>
+      <div id="codeMirr">      
+        <script type="text/javascript">
 
-      <script type="text/javascript">
+          window.onload = function () {
+            var myTextarea = document.getElementById("myCode");
+            editor = CodeMirror.fromTextArea(myTextarea, {
+              tabMode: "indent",
+              matchBrackets: true,
+              lineNumbers: true,
+              lineWrapping: true,
+              indentUnit: 4,
+              mode: "text/x-java",
+              theme: "darcula"
+            });
+            editor.setSize("100%", "780");
 
-        window.onload = function () {
-          var myTextarea = document.getElementById("myCode");
-          editor = CodeMirror.fromTextArea(myTextarea, {
-            tabMode: "indent",
-            matchBrackets: true,
-            lineNumbers: true,
-            lineWrapping: true,
-            indentUnit: 4,
-            mode: "text/x-java",
-            theme: "darcula"
-          });
-          editor.setSize("100%", "780");
+            //editor.doc.replaceSelection("sadfadsf");
+            
+            var myTextareaa = document.getElementById("myPython");
+            editorr = CodeMirror.fromTextArea(myTextareaa, {
+              tabMode: "indent",
+              matchBrackets: true,
+              lineNumbers: true,
+              lineWrapping: true,
+              indentUnit: 4,
+              parserConfig: { 'pythonVersion': 2, 'strictErrors': true },
+              mode: "text/x-cython",
+              theme: "zenburn"
+            });
+            editorr.setSize("100%", "350");
+            editorr.setOption("readOnly", true);
 
-          //editor.doc.replaceSelection("sadfadsf");
-          
-          var myTextareaa = document.getElementById("myPython");
-          editorr = CodeMirror.fromTextArea(myTextareaa, {
-            tabMode: "indent",
-            matchBrackets: true,
-            lineNumbers: true,
-            lineWrapping: true,
-            indentUnit: 4,
-            parserConfig: { 'pythonVersion': 3, 'strictErrors': true },
-            mode: "text/x-cython",
-            theme: "zenburn"
-          });
-          editorr.setSize("100%", "350");
-          editorr.setOption("readOnly", true);
+            var myTextareaaa = document.getElementById("myJs");
+            editorrr = CodeMirror.fromTextArea(myTextareaaa, {
+              tabMode: "indent",
+              matchBrackets: true,
+              lineNumbers: true,
+              lineWrapping: true,
+              indentUnit: 4,
+              mode: "javascript",
+              theme: "zenburn"
+            });
+            editorrr.setSize("100%", "350");
+            editorrr.setOption("readOnly", true)
 
-          var myTextareaaa = document.getElementById("myJs");
-          editorrr = CodeMirror.fromTextArea(myTextareaaa, {
-            tabMode: "indent",
-            matchBrackets: true,
-            lineNumbers: true,
-            lineWrapping: true,
-            indentUnit: 4,
-            mode: "javascript",
-            theme: "zenburn"
-          });
-          editorrr.setSize("100%", "350");
-          editorrr.setOption("readOnly", true)
-
-          tomarValor(editor, editorrr, editorr);
-        }
-
-
+            tomarValor(editor, editorrr, editorr);
+          }
 
 
-      </script>
+
+
+        </script>
+      </div>
 
 
 
