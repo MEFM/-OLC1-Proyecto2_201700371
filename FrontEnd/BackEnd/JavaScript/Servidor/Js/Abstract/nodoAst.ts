@@ -10,6 +10,16 @@ export default class nodoAst{
         this.hijos = new Array<nodoAst>();
     }
 
+    public setHijos(hijos:Array<nodoAst>){
+        this.hijos = hijos;
+    }
+
+
+    public addHijo(valor:String){
+        this.hijos.push(new nodoAst(valor));
+    }
+
+
     public addHijos(hijos:Array<nodoAst>){
         for(var hijo of hijos){
             this.hijos.push(hijo);
