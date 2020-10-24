@@ -93,7 +93,7 @@
 %left 'RMNRQ' 'RMYRQ' 'RMAYIQ' 'RMENIQ'
 %left 'RMAS' 'RGUION'
 %left 'RAST' 'RSLASH'
-%right 'UMENOS' 'UMAS'
+%right 'UMENOS' 'UMAS' 'UNOT'
 
 %start INICIO
 
@@ -107,41 +107,45 @@ INICIO
 ;
 
 A
-    : A CLASE
-    | CLASE
-    |           //VACIO
+    : A CLASE   {$$ = `${$1}${$2}`;}
+    | CLASE     {$$ = `${$1}`;}
+    |           {$$ = null; }
 
 ;
 
 CLASE
-    :RPUBLIC RINTERFACE RIDENTIFICADOR BLOQUEINTERFACE
-    |RPUBLIC RCLASS RIDENTIFICADOR BLOQUECLASE
+    :RPUBLIC RINTERFACE RIDENTIFICADOR BLOQUEINTERFACE      {$$ = `${$1}`;}
+    |RPUBLIC RCLASS RIDENTIFICADOR BLOQUECLASE              {$$ = `${$1}`;}
 ;
 
 BLOQUECLASE
-    :RLLAVAP INSTRUCCIONESC RLLAVCE
-    |RLLAVAP RLLAVCE
+    :RLLAVAP INSTRUCCIONESC RLLAVCE                         {$$ = `${$2}`;}
 ;
 
 BLOQUEINTERFACE
-    :RLLAVAP INSTRUCCIONESIF RLLAVCE
-    |RLLAVAP RLLAVCE
+    :RLLAVAP INSTRUCCIONESIF RLLAVCE                        {$$ = `${$2}`;}
 ;
 
 //TODA ESTA PARTE ES EXCLUSIVAMENTE PARA EL USO DE LA CLASE ¡NO DE LA INTERFAZ! (aunque mas de algo se puede utilizar)
 
 INSTRUCCIONESC
-    :INSTRUCCIONESC INSTRUCCIONC
-    |INSTRUCCIONC
+    :INSTRUCCIONESC INSTRUCCIONC                            {$$ = `${$1}${$2}`;}                   
+    |INSTRUCCIONC                                           {$$ = `${$1}`;}
 ;
 
 
 INSTRUCCIONC
-    :RPUBLIC TIPO DECLARACIONES RPTCOMA
-    |ASIGNACION RPTCOMA
-    |DECLAMETPC RLLAVAP INSTRUCCIONES RLLAVCE
+    :RPUBLIC TIPO DECLARACIONES RPTCOMA                     {$$ = `${$3}`;}
+    |ASIGNACION RPTCOMA                                     {$$ = `${$1}`;}
+    |DECLAMETPC RLLAVAP INSTRUCCIONES RLLAVCE               {$$ = `${$1}`;}
     |DECLAMETPC RLLAVAP RLLAVCE
     |DECLMAIN RLLAVAP INSTRUCCIONES RLLAVCE INSTRUCCIONESCC
+    |error RPTCOMA{
+        console.log('Este es un error sintáctico: ' + yytext + ', en la linea: ' + this._$.first_line + ', en la columna: ' + this._$.first_column); 
+    }
+    |error RLLAVCE{
+        console.log('Este es un error sintáctico: ' + yytext + ', en la linea: ' + this._$.first_line + ', en la columna: ' + this._$.first_column); 
+    }
 ;
 
 DECLMAIN
@@ -157,6 +161,12 @@ INSTRUCCIONCC
     |ASIGNACION RPTCOMA
     |DECLAMETPC RLLAVAP INSTRUCCIONES RLLAVCE
     |DECLAMETPC RLLAVAP RLLAVCE
+    |error RPTCOMA{
+        console.log('Este es un error sintáctico: ' + yytext + ', en la linea: ' + this._$.first_line + ', en la columna: ' + this._$.first_column); 
+    }
+    |error RLLAVCE{
+        console.log('Este es un error sintáctico: ' + yytext + ', en la linea: ' + this._$.first_line + ', en la columna: ' + this._$.first_column); 
+    }
 ;
 DECLAMETPC
     : RPUBLIC TIPOM RIDENTIFICADOR RPARAPE PARAMS RPARCER
@@ -190,7 +200,12 @@ INSTRUCCION
     |FRETURN
     |FBREAK
     |FCONTINUE
-
+    |error RPTCOMA{
+        console.log('Este es un error sintáctico: ' + yytext + ', en la linea: ' + this._$.first_line + ', en la columna: ' + this._$.first_column); 
+    }
+    |error RLLAVCE{
+        console.log('Este es un error sintáctico: ' + yytext + ', en la linea: ' + this._$.first_line + ', en la columna: ' + this._$.first_column); 
+    }
 ;
 
 BLOQUESENT
@@ -265,4 +280,62 @@ FCONTINUE
     :RCONTINUE RPTCOMA
 ;
 
+EXPRESION
+    :EXPRESION RMAS EXPRESION
+    |EXPRESION RGUION EXPRESION
+    |EXPRESION RAST EXPRESION
+    |EXPRESION RSLASH EXPRESION
+    |RGUION EXPRESION %prec UMENOS
+    |RMAS EXPRESION %prec UMAS
+    |RENTERO
+    |RTRUE
+    |RFALSE
+    |RCHAR
+    |RCADENA
+    |RFLOAT
+    |RIDENTIFICADOR
+    |EXPRESION REQUAL EXPRESION
+    |EXPRESION RDIF EXPRESION
+    |EXPRESION RMENIQ EXPRESION
+    |EXPRESION RMAYIQ EXPRESION
+    |EXPRESION RMYRQ EXPRESION
+    |EXPRESION RMNRQ EXPRESION
+    |EXPRESION RAND EXPRESION
+    |EXPRESION ROR EXPRESION
+    |EXPRESION RXOR EXPRESION
+    |EXPRESION RADD
+    |EXPRESION RSUST
+    |RPARAPE EXPRESION RPARCER
+    |RNOT EXPRESION %prec UNOT
+;
 
+INSTRUCCIONESIF
+    :INSTRUCCIONESIF INSTRUCCIONIF
+    |INSTRUCCIONIF
+;
+
+
+INSTRUCCIONIF
+    :RPUBLIC TIPO DECLARACIONES RPTCOMA
+    |RPUBLIC TIPOM RIDENTIFICADOR RPARAPE PARAMS RPARCER RPTCOMA
+    |error RPTCOMA{
+        console.log('Este es un error sintáctico: ' + yytext + ', en la linea: ' + this._$.first_line + ', en la columna: ' + this._$.first_column); 
+    }
+    |error RLLAVCE{
+        console.log('Este es un error sintáctico: ' + yytext + ', en la linea: ' + this._$.first_line + ', en la columna: ' + this._$.first_column); 
+    }
+;
+
+TIPO 
+    :RSTRING
+    |RINT
+    |RDOUBLE
+    |RBOOLEAN
+    |RCHAR
+;
+
+TIPOM
+    :TIPO
+    |RVOID
+
+;
