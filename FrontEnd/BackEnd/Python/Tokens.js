@@ -1,9 +1,10 @@
 class Tokens{
-    numero;
-    fila;
-    columan;
-    lexema;
-    tipo;
+    numero = 0;
+    fila = 0;
+    columan = 0;
+    lexema = "";
+    tipo = "";
+
 
     constructor(numero, fila, columna, lexema, tipo){
         this.numero = numero;

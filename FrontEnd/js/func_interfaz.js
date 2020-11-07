@@ -129,9 +129,18 @@ function envio() {
 
     var textoEnvio = this.codeMirr.getValue();
 
-    var analizador = new Analisis();
+
+    console.log(textoEnvio)
+
+    //var analizador = new Analisis();
     
-    
+
 
     this.codeMirrpy.getDoc().setValue(analizador.lex(textoEnvio));
 }
+
+
+
+
+
+

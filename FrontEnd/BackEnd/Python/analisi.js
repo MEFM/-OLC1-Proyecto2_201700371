@@ -1,6 +1,6 @@
 //var express = require('express');
 
-class Analisis {
+export class Analisis {
   simbolos = {
     ParAp: "(",
     ParC: ")",
@@ -28,7 +28,9 @@ class Analisis {
   listaTokens = [];
   listaErrores = [];
   contador = 0;
-  traduccion;
+  traduccion = "";
+  tabsTrad = "";
+
 
   lex(texto) {
     var lineas = texto.split("\n");
@@ -312,6 +314,7 @@ class Analisis {
     this.listaErrores = [];
     this.listaTokens = [];
     this.contador = 0;
+    this.inicioParser(temporal)
     return this.traductor(temporal);
   }
 
@@ -413,6 +416,16 @@ class Analisis {
           new Tokens(this.contador, fila, columna, palabra, "else")
         );
         break;
+      case "true":
+        this.listaTokens.push(
+          new Tokens(this.contador, fila, columna, palabra, "Bool")
+        );
+        break;
+      case "false":
+        this.listaTokens.push(
+          new Tokens(this.contador, fila, columna, palabra, "Bool")
+        );
+        break;
       case "<=":
         this.listaTokens.push(
           new Tokens(this.contador, fila, columna, palabra, "MenorIgual")
@@ -490,9 +503,10 @@ class Analisis {
     var tabs = "";
     
 
-    for(var i = 0;i < temporal.length;i++){
-      this.traduccion += temporal[i].lexema + " " + temporal[i].tipo + "\n";
-    }
+    // for(var i = 0;i < temporal.length;i++){
+    //   this.traduccion += temporal[i].lexema + " " + temporal[i].tipo + "\n";
+    // }
+    
     
     return this.traduccion;
   }
@@ -503,18 +517,892 @@ class Analisis {
     return string.substring(0, index) + replace + string.substring(index + 1);
   }
 
-  inicioParser(lista){
 
+  preanalisis = new Tokens(0,0,0,"","");
+  listaTemporal = [];
+  numPreanalisis = 0;
+
+  tipoMet = ["char", "String", "int", "double", "boolean", "void"]
+
+  inicioParser(lista){
+    this.listaTemporal = lista;
+    this.listaTemporal.push( new Tokens(9999, 9999 , 9999 , "$$$", "$$$"));
+    this.preanalisis = this.listaTemporal[0]
+    this.numPreanalisis = 0;
+
+    this.A();
   }
+
+  encaje(entrada){
+
+    if (!(entrada == this.preanalisis.tipo)){
+      //Error sintactico
+      console.log("Error sintactico");
+    }else if(!(entrada == (this.preanalisis.tipo == "$$$"))){
+      //Esta cosa es la salida 
+      console.log(entrada + ", "+this.preanalisis.tipo+". AFUERA")
+      this.numPreanalisis = this.numPreanalisis + 1;
+      this.preanalisis = this.listaTemporal[this.numPreanalisis];
+    }
+  }
+
+
+
 
   A(){
     
+    if(this.preanalisis.lexema == "public"){
+      this.encaje(this.preanalisis.tipo)
+      this.CLASS()
+    }else{
+      //EPSILON
+    }
   }
 
-  B(){
+  CLASS(){
+    this.traduccion += "class ";
+    if (this.preanalisis.lexema == "class") {
+      this.encaje(this.preanalisis.tipo); // Classs
+      this.traduccion += this.preanalisis.lexema + ":\n";
+      this.encaje(this.preanalisis.tipo); //Identificador
+      this.encaje(this.preanalisis.tipo); // LlaveApartura
+      this.tabsTrad += "\t";
+      this.traduccion += this.tabsTrad;
+      this.BLOQUE_CLASS();
+      this.encaje(this.preanalisis.tipo);
+      this.tabsTrad = this.replaceAt(this.tabsTrad, 0, "");
+      this.A();
+    } else if (this.preanalisis.lexema == "interface") {
+      this.encaje(this.preanalisis.tipo);
+      this.traduccion += this.preanalisis.lexema + ":\n";
+      this.encaje(this.preanalisis.tipo);
+      this.encaje(this.preanalisis.tipo);
+
+      this.tabsTrad += "\t";
+      this.traduccion += this.tabsTrad;
+      this.BLOQUE_INT();
+
+      this.encaje(this.preanalisis.tipo);
+      this.tabsTrad = this.replaceAt(this.tabsTrad, 0, "");
+
+      this.A();
+    }
+  }
+
+  BLOQUE_INT(){
+    if (this.preanalisis.lexema == "public") {
+      this.encaje(this.preanalisis.tipo);
+      this.FUNC_VARI();
+    } else if (this.preanalisis.tipo == "Identificador") {
+      this.encaje(this.preanalisis.tipo); //Identificador
+      this.traduccion += this.preanalisis.lexema + " ";
+      this.encaje(this.preanalisis.tipo); // Igual
+      this.traduccion += this.preanalisis.lexema + " ";
+      this.E();
+
+      this.encaje(this.preanalisis.tipo);
+      this.traduccion += "\n";
+      this.BLOQUE_INT();
+    }
+  }
+
+  FUNC_VARI(){
+    this.TIPODATOMET();
+
+    if(this.preanalisis.tipo == "Identificador"){
+            this.traduccion += this.preanalisis.lexema + " ";
+            this.encaje(this.preanalisis.tipo);
+
+            this.FUNC_VARIII();
+            this.BLOQUE_INT();
+
+    }
+  }
+
+  FUNC_VARIII(){
+    if(this.preanalisis.lexema == "("){
+      this.traduccion += this.preanalisis.lexema
+      this.encaje(this.preanalisis.tipo)
+      this.PARAMS();
+
+      this.traduccion += this.preanalisis.lexema
+      this.encaje(this.preanalisis.tipo);
+
+      this.encaje(this.preanalisis.tipo);
+      this.traduccion += "\n";
+        
+
+    }else{
+      this.VARIABLEP();
+
+      this.encaje(this.preanalisis.tipo);
+      this.traduccion += "\n";
+      
+    }
+  }
+  
+  BLOQUE_CLASS(){
+    if(this.preanalisis.lexema == "public"){
+      this.encaje(this.preanalisis.tipo)
+      this.FUNC_VAR();
+    }else if(this.preanalisis.tipo == "Identificador"){
+      this.traduccion += this.tabsTrad + this.preanalisis.lexema + " ";
+      this.encaje(this.preanalisis.tipo);
+
+      this.encaje(this.preanalisis.tipo);
+      this.traduccion += this.preanalisis.lexema + " ";
+      this.E();
+
+      this.encaje(this.preanalisis.tipo);
+      this.traduccion += "\n";
+      this.BLOQUE_CLASS();
+        
+      
+    }else{
+      //EPSILON
+    }
+  }
+
+  FUNC_VAR(){
+    if(this.preanalisis.tipo == "Identificador"){
+      this.traduccion += "def init ";
+      this.encaje(this.preanalisis.tipo);
+
+      this.traduccion += this.preanalisis.lexema + " self ,";
+      this.encaje(this.preanalisis.tipo);
+
+      this.PARAMS();
+
+      this.traduccion += this.preanalisis.lexema + ":\n ";
+      this.encaje(this.preanalisis.tipo);
+
+      this.encaje(this.preanalisis.tipo);
+      this.tabsTrad += "\t";
+      this.traduccion += this.tabsTrad;
+      this.INSTRUCCIONES();
+
+      this.encaje(this.preanalisis.tipo);
+      this.tabsTrad = this.replaceAt(this.tabsTrad, 0, "");
+
+      this.BLOQUE_CLASS();
+
+    }else if(this.preanalisis.lexema == "static"){
+      this.traduccion += "def main():\n";
+      this.encaje(this.preanalisis.tipo);
+
+      this.encaje(this.preanalisis.tipo);
+
+      this.encaje(this.preanalisis.tipo);
+
+      this.encaje(this.preanalisis.tipo);
+
+      this.encaje(this.preanalisis.tipo);
+
+      this.encaje(this.preanalisis.tipo);
+
+      this.encaje(this.preanalisis.tipo);
+
+      this.encaje(this.preanalisis.tipo);
+
+      this.encaje(this.preanalisis.tipo);
+      this.encaje(this.preanalisis.tipo);
+      this.tabsTrad += "\t";
+      this.traduccion += this.tabsTrad;
+      this.INSTRUCCIONES();
+
+      this.encaje(this.preanalisis.tipo);
+      this.tabsTrad = this.replaceAt(this.tabsTrad, 0, "");
+      this.BLOQUE_CLASS2();
+       
+
+    }/*Este mueve entre Epsilon y la 3er opcion*/else {
+      var bandera = false
+
+      for(var i = 0; i < this.tipoMet.length; i++){
+        if(this.preanalisis.lexema == this.tipoMet[i]){
+          bandera = true;
+          break;
+        }
+      }
+
+      if(bandera == true){
+        this.TIPODATOMET();
+
+        if(this.preanalisis.tipo == "Identificador"){
+
+          this.encaje(this.preanalisis.tipo)
+          this.traduccion += this.preanalisis.lexema +  " "
+          this.FUNC_VARRR()
+          this.BLOQUE_CLASS()
+
+        }
+      }else{
+        //Este es el Epsilon
+      }
+    }
+  }
+
+  FUNC_VARRR(){
+    if(this.preanalisis.lexema == "("){
+      this.traduccion +=
+        "def " + this.listaTemporal[this.numPreanalisis - 1].lexema;
+
+      this.traduccion += this.preanalisis.lexema + " ";
+      this.encaje(this.preanalisis.tipo);
+      this.PARAMS();
+
+      this.traduccion += this.preanalisis.lexema + ":";
+      this.encaje(this.preanalisis.tipo);
+
+      this.encaje(this.preanalisis.tipo);
+      this.tabsTrad += "\t";
+      this.traduccion += this.tabsTrad;
+      this.INSTRUCCIONES();
+
+      this.encaje(this.preanalisis.tipo);
+
+      this.tabsTrad = this.replaceAt(this.tabsTrad, 0, "");
+       
+
+    }else{
+      this.VARIABLEP()
+
+      if(this.preanalisis.lexema == ";"){
+        this.encaje(this.preanalisis.tipo)
+        this.traduccion += "\n";
+      }
+    }
+  }
+
+  BLOQUE_CLASS2(){
+    if(this.preanalisis.lexema == "public"){
+      this.encaje(this.preanalisis.tipo)
+      this.FUNC_VAR2();
+    }else if(this.preanalisis.tipo == "Identificador"){
+      this.traduccion += this.preanalisis.lexema + " "
+      this.encaje(this.preanalisis.tipo)
+      
+      this.traduccion += this.preanalisis.lexema
+        this.encaje(this.preanalisis.tipo);
+        this.E();
+        
+          this.encaje(this.preanalisis.tipo)
+          this.BLOQUE_CLASS2()
+        
+    }else{
+      //EPSILON
+    }
+  }
+
+  FUNC_VAR2(){
+
+    if(this.preanalisis.tipo == "Identificador"){
+      this.traduccion += "def " + this.preanalisis.lexema;
+      this.encaje(this.preanalisis.tipo);
+
+      this.traduccion += this.preanalisis.lexema;
+      this.encaje(this.preanalisis.tipo);
+      this.PARAMS();
+
+      this.traduccion += this.preanalisis.lexema;
+      this.encaje(this.preanalisis.tipo);
+
+      this.tabsTrad += "\t";
+      this.traduccion += this.tabsTrad;
+
+      this.encaje(this.preanalisis.tipo);
+      this.INSTRUCCIONES();
+
+      this.tabsTrad = this.replaceAt(this.tabsTrad, 0, "");
+      this.encaje(this.preanalisis.tipo);
+      this.BLOQUE_CLASS2();
+      
+              
+    }/*Este mueve entre Epsilon y la 3er opcion*/else {
+      var bandera = false
+
+      for(var i = 0; i < this.tipoMet.length; i++){
+        if(this.preanalisis.lexema == this.tipoMet[i]){
+          bandera = true;
+          break;
+        }
+      }
+
+      if(bandera == true){
+        this.TIPODATOMET();
+
+        if(this.preanalisis.tipo == "Identificador"){
+
+          this.encaje(this.preanalisis.tipo)
+          this.FUNC_VARRR()
+          this.BLOQUE_CLASS2()
+
+        }
+      }else{
+        //Este es el Epsilon
+      }
+    }
+
 
   }
 
+  INSTRUCCIONES(){
+    if(this.preanalisis.lexema == "if"){
+      this.traduccion += this.tabsTrad + this.preanalisis.lexema;
+      this.encaje(this.preanalisis.tipo);
+
+      this.encaje(this.preanalisis.tipo);
+      this.E();
+
+      this.encaje(this.preanalisis.tipo);
+      this.traduccion += ":\n";
+
+      this.tabsTrad += "\n";
+      this.encaje(this.preanalisis.tipo);
+
+      this.INSTRUCCIONES();
+
+      this.tabsTrad = this.replaceAt(this.tabsTrad, 0, "");
+      this.encaje(this.preanalisis.tipo);
+
+      this.IF();
+
+      this.INSTRUCCIONES();
+    }else if(this.preanalisis.lexema == "while"){
+
+      this.traduccion += this.tabsTrad + this.preanalisis.lexema + " ";
+
+      this.encaje(this.preanalisis.tipo);
+
+      this.encaje(this.preanalisis.tipo);
+      this.E();
+
+      this.traduccion += " :\n";
+      this.encaje(this.preanalisis.tipo);
+
+      this.tabsTrad += "\t";
+      this.encaje(this.preanalisis.tipo);
+      this.INSTRUCCIONES();
+
+      this.tabsTrad = this.replaceAt(this.tabsTrad, 0, "");
+      this.encaje(this.preanalisis.tipo);
+
+      this.INSTRUCCIONES();
+
+    }else if(this.preanalisis.lexema == "for"){
+
+      this.traduccion += this.tabsTrad + this.preanalisis.lexema + " "
+
+      this.encaje(this.preanalisis.tipo)
+
+      if(this.preanalisis.lexema == "("){
+        this.encaje(this.preanalisis.tipo)
+        this.TIP(); //
+        this.VARIABLE()
+
+        if(this.preanalisis.lexema == ";"){
+          this.encaje(this.preanalisis.tipo)
+          this.E()
+
+          if(this.preanalisis.lexema == ";"){
+            this.encaje(this.preanalisis.tipo)
+            this.E()
+
+            if(this.preanalisis.lexema == ")"){
+              this.encaje(this.preanalisis.tipo)
+
+              if(this.preanalisis.lexema == "{"){
+                this.encaje(this.preanalisis.tipo)
+                this.INSTRUCCIONES()
+
+                if(this.preanalisis.lexema == "}"){
+                  this.encaje(this.preanalisis.tipo)
+                  this.INSTRUCCIONES()
+                }
+              }
+            }
+          }
+        }
+      }
+    
+    }else if(this.preanalisis.lexema == "do"){
+      this.encaje(this.preanalisis.tipo)
+
+      if(this.preanalisis.lexema == "{"){
+        this.encaje(this.preanalisis.tipo)
+        this.INSTRUCCIONES()
+
+        if(this.preanalisis.lexema == "}"){
+          this.encaje(this.preanalisis.tipo)
+          this.INSTRUCCIONES();
+
+          if(this.preanalisis.lexema == "while"){
+            this.encaje(this.preanalisis.tipo)
+
+            if(this.preanalisis.lexema == "("){
+              this.encaje(this.preanalisis.tipo)
+
+              this.E()
+
+              if(this.preanalisis.lexema == ")"){
+                this.encaje(this.preanalisis.tipo)
+
+                if(this.preanalisis.lexema == ";"){
+                  this.encaje(this.preanalisis.tipo)
+
+
+                }
+              }
+            }
+          }
+
+        }
+
+      }
+      this.INSTRUCCIONES()
+    
+    }else if(this.preanalisis.lexema == "return"){
+      this.encaje(this.preanalisis.tipo)
+
+      this.RETURN()
+
+      if(this.preanalisis.lexema == ";"){
+        this.encaje(this.preanalisis.tipo)
+
+
+      }
+
+      this.INSTRUCCIONES()
+      
+    }else if(this.preanalisis.lexema == "break"){
+      this.encaje(this.preanalisis.tipo)
+      
+      if(this.preanalisis.lexema == ";"){
+        this.encaje(this.preanalisis.tipo)
+      }
+
+      this.INSTRUCCIONES()
+    }else if(this.preanalisis.lexema == "continue"){
+      this.encaje(this.preanalisis.tipo)
+      if(this.preanalisis.lexema == ";"){
+        this.encaje(this.preanalisis.tipo)
+      }
+
+      this.INSTRUCCIONES()
+
+    }else if(this.preanalisis.tipo == "Identificador"){
+      this.encaje(this.preanalisis.tipo)
+      
+      this.IDI()
+
+      if(this.preanalisis.lexema == ";"){
+        this.encaje(this.preanalisis.tipo)
+      }
+
+      this.INSTRUCCIONES()
+    }else if(this.preanalisis.lexema == "System"){
+      this.encaje(this.preanalisis.tipo)
+      if(this.preanalisis.lexema == "."){
+        this.encaje(this.preanalisis.tipo)
+        if(this.preanalisis.lexema == "out"){
+          this.encaje(this.preanalisis.tipo)
+
+          if(this.preanalisis.lexema == "."){
+            this.encaje(this.preanalisis.tipo)
+            this.PR()
+
+          if(this.preanalisis.lexema == "("){
+            this.encaje(this.preanalisis.tipo)
+
+            this.E()
+
+            if(this.preanalisis.lexema == ")"){
+              this.encaje(this.preanalisis.tipo)
+
+              if(this.preanalisis.lexema == ";"){
+                this.encaje(this.preanalisis.tipo)
+              }
+            }
+          }
+        }
+        }
+      }
+
+      this.INSTRUCCIONES()
+    }else{
+      var bandera = false;
+
+      for(var i = 0;i<this.tipoMet.length; i++){
+        if(this.preanalisis.lexema == this.tipoMet[i]){
+          bandera= true;
+          break;
+        }
+      }
+
+      if(bandera == true){
+        this.TIPODATO();
+        this.VARIABLE();
+
+        if(this.preanalisis.lexema == ";"){
+          this.encaje(this.preanalisis.tipo);
+          
+        }
+        this.INSTRUCCIONES()
+      }else{
+        //EPSILON
+      }
+
+    }
+  }
+
+  RETURN(){
+    if(this.preanalisis.tipo == "Identificador" || this.preanalisis.tipo == "Cadena" || this.preanalisis.tipo == "Caracter"
+    || this.preanalisis.tipo == "Entero" || this.preanalisis.tipo == "Float" || this.preanalisis.tipo == "Bool"){
+      this.E()
+    }
+  }
+
+  IDI(){
+    if(this.preanalisis.lexema == "="){
+      this.encaje(this.preanalisis.tipo)
+      this.E()
+
+      if(this.preanalisis.lexema == ";"){
+        this.encaje(this.preanalisis.tipo)
+      }
+    }else if(this.preanalisis.lexema == "("){
+      this.encaje(this.preanalisis.tipo)
+
+      this.PARAMSEN();
+
+      if(this.preanalisis.lexema == ")"){
+        this.encaje(this.preanalisis.tipo)
+
+        if(this.preanalisis.lexema == ";"){
+          this.encaje(this.preanalisis.tipo)
+        }
+      }
+    }
+  }
+
+  VARIABLEP(){
+    this.VARIABLEE()
+  }
+
+  VARIABLE(){
+    if(this.preanalisis.tipo == "Identificador"){
+      this.encaje(this.preanalisis.tipo)
+      this.VARIABLEE()
+    }
+  } 
+
+  VARIABLEE(){
+    if(this.preanalisis.lexema == ","){
+      this.encaje(this.preanalisis.tipo)
+
+      if(this.preanalisis.tipo == "Identificador"){
+        this.encaje(this.preanalisis.tipo)
+
+        this.VARIABLEE()
+      }
+    }else if(this.preanalisis.lexema == "="){
+      this.encaje(this.preanalisis.tipo)
+      
+      this.E()
+      this.VARIABLEE()
+    }else if(this.preanalisis.tipo == "Identificador"){
+      this.encaje(this.preanalisis.tipo)
+    }
+  }
+
+  TIP(){
+    if(this.preanalisis.tipo == "Identificador" || this.preanalisis.tipo == "Cadena" || this.preanalisis.tipo == "Caracter"
+    || this.preanalisis.tipo == "Entero" || this.preanalisis.tipo == "Float" || this.preanalisis.tipo == "Bool"){
+      this.TIPODATO()
+    }
+  }
+  
+
+  TIPO(){
+
+  }
+
+  PR(){
+    if(this.preanalisis.lexema == "println"){
+      this.encaje(this.preanalisis.tipo)     
+    }else if(this.preanalisis.lexema == "print"){
+      this.encaje(this.preanalisis.tipo)
+    }
+  }
+
+  IF(){
+    if(this.preanalisis.lexema == "else"){
+      this.encaje(this.preanalisis.tipo)
+      this.IFF()
+    }
+  }
+
+  IFF(){
+    if(this.preanalisis.lexema == "if"){
+      this.encaje(this.preanalisis.tipo)
+      if(this.preanalisis.lexema =="("){
+        this.encaje(this.preanalisis.tipo)
+        this.E()
+
+        if(this.preanalisis.lexema == ")"){
+          this.encaje(this.preanalisis.tipo)
+
+          if(this.preanalisis.lexema == "{"){
+            this.encaje(this.preanalisis.tipo)
+
+            this.INSTRUCCIONES()
+
+            if(this.preanalisis.lexema == "}"){
+              this.encaje(this.preanalisis.tipo)
+            }
+          }
+        }
+      }
+    }else if(this.preanalisis.lexema == "{"){
+      this.encaje(this.preanalisis.tipo)
+
+      this.INSTRUCCIONES()
+
+      if(this.preanalisis.lexema == "}"){
+        this.encaje(this.preanalisis.tipo)
+      }
+    }
+  }
+
+  PARAMSEN(){
+    if(this.preanalisis.tipo == "Identificador" || this.preanalisis.tipo == "Cadena" || this.preanalisis.tipo == "Caracter"
+    || this.preanalisis.tipo == "Entero" || this.preanalisis.tipo == "Float" || this.preanalisis.tipo == "Bool"){
+      this.VALOR()
+      this.PARAMSENN()
+    }
+  }
+
+  PARAMSENN(){
+    if(this.preanalisis.lexema == ","){
+      this.encaje(this.preanalisis.tipo)
+      this.PARAMSENN()
+    }else{
+      if(this.preanalisis.tipo == "Identificador" || this.preanalisis.tipo == "Cadena" || this.preanalisis.tipo == "Caracter"
+      || this.preanalisis.tipo == "Entero" || this.preanalisis.tipo == "Float" || this.preanalisis.tipo == "Bool"){
+        this.VALOR()
+      } 
+    } 
+  }
+
+  PARAMS(){
+    var bandera = false;
+
+    for(var i = 0; i<this.tipoMet.length ; i++){
+      if(this.preanalisis.lexema == this.tipoMet[i]){
+        bandera = true
+        break
+      }
+    }
+
+    if(bandera == true){
+      this.TIPODATO()
+      if(this.preanalisis.tipo == "Identificador"){
+        this.encaje(this.preanalisis.tipo)
+        this.PARAMSS()
+      }
+    }else{
+      //Epsilon
+    }
+  }
+
+  PARAMSS(){
+    if(this.preanalisis.lexema == ","){
+      this.encaje(this.preanalisis.tipo)
+      this.PARAMSS()
+    }else {
+
+      var bandera = false;
+
+      for(var i = 0; i<this.tipoMet.length ; i++){
+        if(this.preanalisis.lexema == this.tipoMet[i]){
+          bandera = true
+          break
+        }
+      }
+
+      if(bandera == true){
+        this.TIPODATO()
+        if(this.preanalisis.tipo == "Identificador"){
+          this.encaje(this.preanalisis.tipo)
+        }
+      }
+
+    }
+  }
+
+  E(){
+    if(this.preanalisis.lexema == "+"){
+      this.encaje(this.preanalisis.tipo)
+      this.T()
+      this.EE()
+      this.EEE()
+    }else if(this.preanalisis.lexema == "-"){
+      this.encaje(this.preanalisis.tipo)
+      this.T()
+      this.EE()
+      this.EEE()
+    }else if(this.preanalisis.lexema == "!"){
+      this.encaje(this.preanalisis.tipo)
+      this.T()
+      this.EE()
+      this.EEE()
+    }else{
+      this.T()
+      this.EE()
+      this.EEE()
+    }
+  }
+
+  EE(){
+    if(this.preanalisis.lexema == "-"){
+      this.encaje(this.preanalisis.tipo)
+      this.T()
+      this.EE()
+    }else     if(this.preanalisis.lexema == "/"){
+      this.encaje(this.preanalisis.tipo)
+      this.T()
+      this.EE()
+    }else     if(this.preanalisis.lexema == "||"){
+      this.encaje(this.preanalisis.tipo)
+      this.T()
+      this.EE()
+    }else     if(this.preanalisis.lexema == "&&"){
+      this.encaje(this.preanalisis.tipo)
+      this.T()
+      this.EE()
+    }else     if(this.preanalisis.lexema == "=="){
+      this.encaje(this.preanalisis.tipo)
+      this.T()
+      this.EE()
+    }else     if(this.preanalisis.lexema == "!="){
+      this.encaje(this.preanalisis.tipo)
+      this.T()
+      this.EE()
+    }else     if(this.preanalisis.lexema == "^"){
+      this.encaje(this.preanalisis.tipo)
+      this.T()
+      this.EE()
+    }else     if(this.preanalisis.lexema == "<="){
+      this.encaje(this.preanalisis.tipo)
+      this.T()
+      this.EE()
+    }else     if(this.preanalisis.lexema == ">="){
+      this.encaje(this.preanalisis.tipo)
+      this.T()
+      this.EE()
+    }else     if(this.preanalisis.lexema == "<"){
+      this.encaje(this.preanalisis.tipo)
+      this.T()
+      this.EE()
+    }else     if(this.preanalisis.lexema == ">"){
+      this.encaje(this.preanalisis.tipo)
+      this.T()
+      this.EE()
+    }else     if(this.preanalisis.lexema == "+"){
+      this.encaje(this.preanalisis.tipo)
+      this.T()
+      this.EE()
+    }else    {
+    } 
+  }
+
+  EEE(){
+    if(this.preanalisis.lexema == "++"){
+      this.encaje(this.preanalisis.tipo)
+    }else if(this.preanalisis.lexema == "--"){
+      this.encaje(this.preanalisis.tipo)
+    }
+  }
+
+  T(){
+    this.F()
+    this.TT()
+  }
+
+  TT(){
+    if(this.preanalisis.lexema == "*"){
+      this.encaje(this.preanalisis.tipo)
+      this.F()
+      this.TT()
+    }else{
+      if(this.preanalisis.lexema == "("){
+        this.F()
+        this.TT()
+      }else{
+        //EPsilon
+      }
+    }
+  }
+
+  F(){
+    if(this.preanalisis.lexema == "("){
+      this.encaje(this.preanalisis.tipo)
+      this.E()
+      if(this.preanalisis.lexema == ")"){
+        this.encaje(this.preanalisis.tipo)
+      }
+    }else{
+      this.VALOR()
+    }
+  }
+
+  VALOR(){
+    if(this.preanalisis.tipo == "Identificador"){
+      this.encaje(this.preanalisis.tipo)
+    }else if(this.preanalisis.tipo == "Cadena"){
+      this.encaje(this.preanalisis.tipo)
+    }else if(this.preanalisis.tipo == "Caracter"){
+      this.encaje(this.preanalisis.tipo)
+    }else if(this.preanalisis.tipo == "Float"){
+      this.encaje(this.preanalisis.tipo)
+    }else if(this.preanalisis.tipo == "Entero"){
+      this.encaje(this.preanalisis.tipo)
+    }else if(this.preanalisis.tipo == "Bool"){
+      this.encaje(this.preanalisis.tipo)
+    }
+  }
+
+  TIPODATO(){
+    if(this.preanalisis.tipo == "String"){
+      this.encaje(this.preanalisis.tipo)
+    }else if(this.preanalisis.tipo == "char"){
+      this.encaje(this.preanalisis.tipo)
+    }else if(this.preanalisis.tipo == "int"){
+      this.encaje(this.preanalisis.tipo)
+    }else if(this.preanalisis.tipo == "double"){
+      this.encaje(this.preanalisis.tipo)
+    }else if(this.preanalisis.tipo == "boolean"){
+      this.encaje(this.preanalisis.tipo)
+    }else if(this.preanalisis.tipo == "void"){
+      this.encaje(this.preanalisis.tipo)
+    }
+  }
+
+  TIPODATOMET(){
+    if(this.preanalisis.tipo == "String"){
+      this.encaje(this.preanalisis.tipo)
+    }else if(this.preanalisis.tipo == "char"){
+      this.encaje(this.preanalisis.tipo)
+    }else if(this.preanalisis.tipo == "int"){
+      this.encaje(this.preanalisis.tipo)
+    }else if(this.preanalisis.tipo == "double"){
+      this.encaje(this.preanalisis.tipo)
+    }else if(this.preanalisis.tipo == "boolean"){
+      this.encaje(this.preanalisis.tipo)
+    }else if(this.preanalisis.tipo == "void"){
+      this.encaje(this.preanalisis.tipo)
+    }
+  }
 }
 
 
